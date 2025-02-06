@@ -1,0 +1,30 @@
+name: PR File Checker
+
+on:
+  pull_request:
+    branches:
+      - main  # ou outra branch principal
+
+jobs:
+  check-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar o código
+        uses: actions/checkout@v3
+
+      - name: Listar arquivos modificados
+        id: changed-files
+        run: |
+          git fetch origin main
+          git diff --name-only origin/main > changed_files.txt
+          cat changed_files.txt
+
+      - name: Checar arquivos suspeitos
+        id: check-malicious
+        run: |
+          if grep -E "curl|wget|base64" $(cat changed_files.txt); then
+            echo "Arquivos suspeitos detectados!" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "Nenhum arquivo suspeito encontrado." >> $GITHUB_STEP_SUMMARY
+          fi
